@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOGISLY - Invoice Flow Prototype</title>
+    <style>
+        :root {
+            --primary-teal: #00b4bd;
+            --primary-orange: #f59e0b;
+            --primary-red: #ef4444;
+            --primary-green: #22c55e;
+            --bg-light: #f4f7f6;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+            --card-border: #e2e8f0;
+            --btn-disabled: #cbd5e1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #0f172a; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: var(--text-dark); }
+
+        .phone-wrapper {
+            width: 390px; height: 844px;
+            background-color: var(--bg-light);
+            border: 12px solid #000;
+            border-radius: 44px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .phone-notch {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 156px; height: 28px; background: #000;
+            border-bottom-left-radius: 18px; border-bottom-right-radius: 18px; z-index: 10000;
+        }
+
+        /* App bars */
+        .app-bar {
+            background-color: var(--primary-teal);
+            padding: 40px 16px 12px;
+            display: none; align-items: center; justify-content: space-between;
+            color: #fff; position: relative; z-index: 100; flex-shrink: 0;
+        }
+        .app-bar.bar-active { display: flex; }
+        .app-bar-title { font-size: 18px; font-weight: 800; }
+        .back-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 0 6px; }
+        .header-right { display: flex; gap: 14px; font-size: 18px; color: #fff; }
+
+        /* Logo bar */
+        .logo-bar {
+            background-color: var(--primary-teal);
+            padding: 40px 16px 10px;
+            display: none; align-items: center; justify-content: space-between;
+            color: #fff; flex-shrink: 0; z-index: 100;
+        }
+        .logo-bar.bar-active { display: flex; }
+        .logo-text { font-size: 22px; font-weight: 900; letter-spacing: 1px; }
+
+        /* Tab nav */
+        .tab-nav-bar {
+            background-color: var(--primary-teal);
+            display: none; overflow-x: auto; padding: 0 8px 8px; gap: 4px; flex-shrink: 0;
+        }
+        .tab-nav-bar.bar-active { display: flex; }
+        .tab-nav-bar::-webkit-scrollbar { display: none; }
+        .tab-item { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; color: rgba(255,255,255,0.7); cursor: pointer; border: none; background: none; }
+        .tab-item.active { background: rgba(255,255,255,0.25); color: #fff; }
+
+        /* Screens */
+        .viewport { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+        .app-screen { display: none; flex-direction: column; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: var(--bg-light); }
+        .app-screen.active-screen { display: flex; }
+
+        /* Filter pills */
+        .filter-bar { display: flex; gap: 8px; padding: 10px 12px; overflow-x: auto; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--card-border); }
+        .filter-bar::-webkit-scrollbar { display: none; }
+        .filter-pill { padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1.5px solid var(--card-border); background: #fff; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+        .filter-pill.active { border-color: var(--primary-teal); color: var(--primary-teal); background: rgba(0,180,189,0.07); }
+
+        /* Search bar */
+        .search-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #fff; border-bottom: 1px solid var(--card-border); flex-shrink: 0; }
+        .search-input { flex: 1; border: none; outline: none; font-size: 13px; color: #94a3b8; background: none; }
+        .search-icon { font-size: 15px; color: #94a3b8; }
+
+        /* Scroll area */
+        .scroll-area { flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+        .scroll-area::-webkit-scrollbar { width: 3px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+        /* Invoice cards */
+        .inv-card { background: #fff; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border: 1px solid var(--card-border); cursor: pointer; transition: box-shadow 0.15s; }
+        .inv-card:active { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .inv-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .inv-badge { padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 800; color: #fff; }
+        .badge-teal { background: var(--primary-teal); }
+        .badge-red { background: var(--primary-red); }
+        .badge-orange { background: var(--primary-orange); }
+        .inv-card-row { display: flex; justify-content: space-between; align-items: flex-end; }
+        .inv-meta { font-size: 11px; color: var(--text-muted); flex: 1; }
+        .inv-price { font-size: 14px; font-weight: 800; color: var(--text-dark); }
+        .inv-dest { font-size: 12px; color: var(--text-dark); font-weight: 500; }
+        .status-tag { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px; white-space: nowrap; }
+        .status-belum { color: #94a3b8; }
+        .status-klaim { background: rgba(245,158,11,0.12); color: var(--primary-orange); border: 1px solid rgba(245,158,11,0.3); }
+        .payment-tag { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--primary-teal); font-weight: 600; }
+        .lunas-tag { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #16a34a; font-weight: 600; }
+
+        /* Detail screen */
+        .detail-scroll { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .detail-scroll::-webkit-scrollbar { width: 3px; }
+        .section-card { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid var(--card-border); }
+        .section-title { font-size: 13px; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; }
+        .req { color: var(--primary-red); }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--text-muted); }
+        .detail-value { font-weight: 600; color: var(--text-dark); text-align: right; max-width: 58%; }
+        .detail-value.link { color: var(--primary-teal); }
+        .status-ok { background: rgba(34,197,94,0.1); color: #16a34a; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .btn-outline { border: 1.5px solid var(--primary-teal); color: var(--primary-teal); background: #fff; border-radius: 8px; width: 100%; padding: 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+        .btn-upload { border: 1.5px dashed var(--primary-teal); color: var(--primary-teal); background: #fff; border-radius: 8px; width: 100%; padding: 10px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-upload.solid { border-style: solid; }
+        .btn-submit { background: var(--primary-orange); color: #fff; border: none; border-radius: 10px; width: 100%; padding: 14px; font-size: 14px; font-weight: 800; cursor: pointer; }
+        .btn-cancel { background: none; border: none; color: var(--primary-teal); font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; padding: 8px; }
+        .bottom-actions { padding: 12px; display: flex; flex-direction: column; gap: 8px; background: #fff; border-top: 1px solid var(--card-border); flex-shrink: 0; }
+
+        /* Cost table */
+        .cost-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: var(--primary-teal); padding-bottom: 6px; border-bottom: 1.5px solid rgba(0,180,189,0.2); margin-bottom: 4px; }
+        .cost-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 12px; border-bottom: 1px solid #f8fafc; }
+        .cost-row.total { border-top: 1.5px solid var(--card-border); border-bottom: none; font-weight: 800; font-size: 13px; padding-top: 10px; }
+        .cost-label { color: var(--text-muted); }
+        .cost-value { font-weight: 600; color: var(--text-dark); }
+        .cost-value.deduct { color: #16a34a; }
+
+        /* Upload sheet */
+        .sheet-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 400; display: none; }
+        .sheet-overlay.visible { display: block; }
+        .bottom-sheet { position: absolute; bottom: 0; left: 0; right: 0; background: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px 16px 28px; box-shadow: 0 -8px 24px rgba(0,0,0,0.15); z-index: 500; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+        .bottom-sheet.visible { transform: translateY(0); }
+        .sheet-title { font-size: 15px; font-weight: 800; color: var(--text-dark); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .sheet-option { display: flex; align-items: center; gap: 14px; padding: 13px 0; font-size: 14px; font-weight: 600; color: var(--text-dark); cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+        .sheet-option:last-child { border-bottom: none; }
+        .sheet-icon { width: 42px; height: 42px; border-radius: 10px; background: rgba(0,180,189,0.1); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+        /* Doc row */
+        .doc-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); padding-top: 8px; }
+
+        /* Success */
+        .success-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; text-align: center; }
+        .success-icon { font-size: 64px; margin-bottom: 16px; }
+        .success-title { font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
+        .success-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
+        .success-do-box { background: rgba(0,180,189,0.08); border-radius: 12px; padding: 14px 18px; font-size: 13px; font-weight: 700; color: var(--primary-teal); margin-bottom: 28px; width: 100%; }
+    </style>
+</head>
+<body>
+<div class="phone-wrapper">
+    <div class="phone-notch"></div>
+
+    <!-- LOGO BAR (list screens) -->
+    <div id="bar-logo" class="logo-bar bar-active">
+        <span class="logo-text">L▸GISLY</span>
+        <div class="header-right">🔔 ⚙️</div>
+    </div>
+
+    <!-- TAB NAV (list screens) -->
+    <div id="bar-tabs" class="tab-nav-bar bar-active">
+        <button class="tab-item">JALAN</button>
+        <button class="tab-item">UANG MUKA</button>
+        <button class="tab-item active">INVOICE</button>
+        <button class="tab-item">ARMADA</button>
+        <button class="tab-item">PENGEMUDI</button>
+    </div>
+
+    <!-- DETAIL APP BAR -->
+    <div id="bar-detail" class="app-bar">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <button class="back-btn" id="back-from-detail">‹</button>
+            <span class="app-bar-title">Detail Invoice</span>
+        </div>
+        <div style="width:24px;"></div>
+    </div>
+
+    <!-- SUCCESS APP BAR -->
+    <div id="bar-success" class="app-bar">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <button class="back-btn" onclick="navigateTo('screen-list-perlu')">‹</button>
+            <span class="app-bar-title">Invoice Diajukan</span>
+        </div>
+    </div>
+
+    <!-- VIEWPORT -->
+    <div class="viewport">
+
+        <!-- ══════════════════════════════════════════
+             SCREEN: LIST - PERLU DIAJUKAN
+        ══════════════════════════════════════════ -->
+        <div id="screen-list-perlu" class="app-screen active-screen">
+            <div class="filter-bar">
+                <button class="filter-pill active" onclick="switchListTab(this,'perlu')">Perlu Diajukan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'tindakan')">Butuh Tindakan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'persetujuan')">Menunggu Persetujuan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'pembayaran')">Menunggu Pembayaran</button>
+                <button class="filter-pill" onclick="switchListTab(this,'lunas')">Lunas</button>
+            </div>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input class="search-input" placeholder="Cari Nomor DO atau lokasi bongkar" />
+            </div>
+            <div class="scroll-area" id="list-perlu">
+                <!-- JS will render -->
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             SCREEN: DETAIL (no SJ yet)
+        ══════════════════════════════════════════ -->
+        <div id="screen-detail-no-sj" class="app-screen">
+            <div class="detail-scroll">
+                <div class="section-card">
+                    <div class="section-title">Ringkasan Order</div>
+                    <div class="detail-row"><span class="detail-label">No. DO</span><span class="detail-value link" id="d1-do"></span></div>
+                    <div class="detail-row"><span class="detail-label">Tanggal Muat</span><span class="detail-value" id="d1-muat"></span></div>
+                    <div class="detail-row"><span class="detail-label">Tanggal Bongkar</span><span class="detail-value" id="d1-bongkar"></span></div>
+                    <div class="detail-row"><span class="detail-label">Unit</span><span class="detail-value" id="d1-unit"></span></div>
+                    <div class="detail-row"><span class="detail-label">Pengemudi</span><span class="detail-value link" id="d1-driver"></span></div>
+                </div>
+                <div class="section-card">
+                    <div class="section-title">Truk & Driver <span class="req">*</span></div>
+                    <div class="status-ok">✅ Data lengkap dan sesuai</div>
+                    <button class="btn-outline">Perbarui Data</button>
+                </div>
+                <div class="section-card">
+                    <div class="section-title">Surat Jalan <span class="req">*</span></div>
+                    <button class="btn-upload" onclick="showUploadSheet()">📄 Unggah Surat Jalan</button>
+                    <div style="display:flex;gap:16px;margin-top:10px;">
+                        <span style="font-size:11px;color:var(--primary-teal);font-weight:600;cursor:pointer;">Ketentuan Surat Jalan</span>
+                        <span style="font-size:11px;color:var(--primary-teal);font-weight:600;cursor:pointer;">Baca Petunjuk</span>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <div class="section-title">Rincian Biaya</div>
+                    <div class="cost-header"><span>Deskripsi</span><span>Biaya</span></div>
+                    <div class="cost-row"><span class="cost-label">Biaya Pengiriman</span><span class="cost-value" id="d1-pengiriman"></span></div>
+                    <div class="cost-row"><span class="cost-label">Biaya Admin & Asuransi</span><span class="cost-value deduct" id="d1-admin"></span></div>
+                    <div class="cost-row"><span class="cost-label">PPN 0.0%</span><span class="cost-value">Rp0</span></div>
+                    <div class="cost-row"><span class="cost-label">PPh 2.0%</span><span class="cost-value deduct" id="d1-pph"></span></div>
+                </div>
+            </div>
+            <!-- Upload Sheet -->
+            <div class="sheet-overlay" id="sheet-overlay" onclick="hideUploadSheet()"></div>
+            <div class="bottom-sheet" id="upload-sheet">
+                <div class="sheet-title">
+                    Pilih Jenis Unggahan
+                    <span style="cursor:pointer;font-size:20px;color:#94a3b8;" onclick="hideUploadSheet()">✕</span>
+                </div>
+                <div class="sheet-option" onclick="uploadAndProceed()">
+                    <div class="sheet-icon">📷</div> Kamera
+                </div>
+                <div class="sheet-option" onclick="uploadAndProceed()">
+                    <div class="sheet-icon">🖼️</div> Galeri
+                </div>
+                <div class="sheet-option" onclick="uploadAndProceed()">
+                    <div class="sheet-icon">📁</div> Dokumen
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             SCREEN: DETAIL (with SJ) + submit
+        ══════════════════════════════════════════ -->
+        <div id="screen-detail-with-sj" class="app-screen">
+            <div class="detail-scroll">
+                <div class="section-card">
+                    <div class="section-title">Ringkasan Order</div>
+                    <div class="detail-row"><span class="detail-label">No. DO</span><span class="detail-value link" id="d2-do"></span></div>
+                    <div class="detail-row"><span class="detail-label">Tanggal Muat</span><span class="detail-value" id="d2-muat"></span></div>
+                    <div class="detail-row"><span class="detail-label">Tanggal Bongkar</span><span class="detail-value" id="d2-bongkar"></span></div>
+                    <div class="detail-row"><span class="detail-label">Unit</span><span class="detail-value" id="d2-unit"></span></div>
+                    <div class="detail-row"><span class="detail-label">Pengemudi</span><span class="detail-value link" id="d2-driver"></span></div>
+                </div>
+                <div class="section-card">
+                    <div class="section-title">Truk & Driver <span class="req">*</span></div>
+                    <div class="status-ok">✅ Data lengkap dan sesuai</div>
+                    <button class="btn-outline">Perbarui Data</button>
+                </div>
+                <div class="section-card">
+                    <div class="section-title">Surat Jalan <span class="req">*</span></div>
+                    <button class="btn-upload solid">➕ Tambah Surat Jalan</button>
+                    <div style="display:flex;gap:16px;margin-top:8px;">
+                        <span style="font-size:11px;color:var(--primary-teal);font-weight:600;cursor:pointer;">Ketentuan Surat Jalan</span>
+                        <span style="font-size:11px;color:var(--primary-teal);font-weight:600;cursor:pointer;">Baca Petunjuk</span>
+                    </div>
+                    <div class="doc-row">
+                        <span style="color:var(--primary-teal);font-size:14px;">📄</span>
+                        <span>WhatsApp Image 2026-05-18 at...</span>
+                        <span style="color:var(--primary-teal);font-weight:700;margin-left:auto;font-size:10px;">+22 Surat jalan lain</span>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <div class="section-title">Rincian Biaya</div>
+                    <div class="cost-header"><span>Deskripsi</span><span>Biaya</span></div>
+                    <div class="cost-row"><span class="cost-label">Biaya Pengiriman</span><span class="cost-value" id="d2-pengiriman"></span></div>
+                    <div id="d2-bongkar-row" class="cost-row" style="display:none;"><span class="cost-label">Biaya Bongkar</span><span class="cost-value" id="d2-bongkar-fee"></span></div>
+                    <div class="cost-row"><span class="cost-label">Biaya Admin & Asuransi</span><span class="cost-value deduct" id="d2-admin"></span></div>
+                    <div class="cost-row"><span class="cost-label">PPN 0.0%</span><span class="cost-value">Rp0</span></div>
+                    <div class="cost-row"><span class="cost-label">PPh 2.0%</span><span class="cost-value deduct" id="d2-pph"></span></div>
+                    <div class="cost-row total"><span class="cost-label" style="color:var(--text-dark);">Total Tagihan</span><span class="cost-value" id="d2-total" style="font-size:14px;"></span></div>
+                </div>
+            </div>
+            <div class="bottom-actions">
+                <button class="btn-submit" onclick="submitInvoice()">Ajukan Invoice</button>
+                <button class="btn-cancel" onclick="navigateTo('screen-list-perlu')">Batal</button>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             SCREEN: SUCCESS
+        ══════════════════════════════════════════ -->
+        <div id="screen-success" class="app-screen">
+            <div class="success-body">
+                <div class="success-icon">🎉</div>
+                <div class="success-title">Invoice Berhasil Diajukan!</div>
+                <div class="success-sub">Invoice kamu sudah dikirimkan dan sedang menunggu persetujuan dari tim Logisly.</div>
+                <div class="success-do-box" id="success-do-box">DO: —</div>
+                <button class="btn-submit" onclick="navigateTo('screen-list-persetujuan')" style="width:100%;">Lihat Status Invoice</button>
+                <button class="btn-cancel" onclick="navigateTo('screen-list-perlu')" style="margin-top:8px;">Kembali ke Daftar</button>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             SCREEN: LIST - MENUNGGU PERSETUJUAN
+        ══════════════════════════════════════════ -->
+        <div id="screen-list-persetujuan" class="app-screen">
+            <div class="filter-bar">
+                <button class="filter-pill" onclick="switchListTab(this,'perlu')">Perlu Diajukan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'tindakan')">Butuh Tindakan</button>
+                <button class="filter-pill active" onclick="switchListTab(this,'persetujuan')">Menunggu Persetujuan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'pembayaran')">Menunggu Pembayaran</button>
+                <button class="filter-pill" onclick="switchListTab(this,'lunas')">Lunas</button>
+            </div>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input class="search-input" placeholder="Cari Nomor DO atau lokasi bongkar" />
+            </div>
+            <div class="scroll-area" id="list-persetujuan"></div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             SCREEN: LIST - BUTUH TINDAKAN
+        ══════════════════════════════════════════ -->
+        <div id="screen-list-tindakan" class="app-screen">
+            <div class="filter-bar">
+                <button class="filter-pill" onclick="switchListTab(this,'perlu')">Perlu Diajukan</button>
+                <button class="filter-pill active" onclick="switchListTab(this,'tindakan')">Butuh Tindakan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'persetujuan')">Menunggu Persetujuan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'pembayaran')">Menunggu Pembayaran</button>
+                <button class="filter-pill" onclick="switchListTab(this,'lunas')">Lunas</button>
+            </div>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input class="search-input" placeholder="Cari Nomor DO atau lokasi bongkar" />
+            </div>
+            <div class="scroll-area" id="list-tindakan"></div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             SCREEN: LIST - MENUNGGU PEMBAYARAN
+        ══════════════════════════════════════════ -->
+        <div id="screen-list-pembayaran" class="app-screen">
+            <div class="filter-bar">
+                <button class="filter-pill" onclick="switchListTab(this,'perlu')">Perlu Diajukan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'tindakan')">Butuh Tindakan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'persetujuan')">Menunggu Persetujuan</button>
+                <button class="filter-pill active" onclick="switchListTab(this,'pembayaran')">Menunggu Pembayaran</button>
+                <button class="filter-pill" onclick="switchListTab(this,'lunas')">Lunas</button>
+            </div>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input class="search-input" placeholder="Cari Nomor DO atau lokasi bongkar" />
+            </div>
+            <div class="scroll-area" id="list-pembayaran"></div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             SCREEN: LIST - LUNAS
+        ══════════════════════════════════════════ -->
+        <div id="screen-list-lunas" class="app-screen">
+            <div class="filter-bar">
+                <button class="filter-pill" onclick="switchListTab(this,'perlu')">Perlu Diajukan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'tindakan')">Butuh Tindakan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'persetujuan')">Menunggu Persetujuan</button>
+                <button class="filter-pill" onclick="switchListTab(this,'pembayaran')">Menunggu Pembayaran</button>
+                <button class="filter-pill active" onclick="switchListTab(this,'lunas')">Lunas</button>
+            </div>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input class="search-input" placeholder="Cari Nomor DO atau lokasi bongkar" />
+            </div>
+            <div class="scroll-area" id="list-lunas"></div>
+        </div>
+
+    </div><!-- end viewport -->
+</div><!-- end phone-wrapper -->
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const invoiceData = {
+    perlu: [
+        { id:"AZK26209", bongkarDate:"14 May 2026", dest:"PT MEGADEPO INDONESIA", unit:"CDD Box", plat:"B 9316 FXW", price:"Rp7.400.000", extra:"(+2)", muat:"08 May 2026", driver:"Sunaryo", driverPhone:"6285714521924", pengiriman:"Rp7.400.000", bongkarFee:"Rp50.000", admin:"-Rp40.000", pph:"-Rp149.000", total:"Rp7.261.000", hasSJ: true },
+        { id:"AZK26220", bongkarDate:"16 May 2026", dest:"Mitra 10 DC Balang Bendo", unit:"CDD Box Long", plat:"B 9327 FXW", price:"Rp3.500.000", muat:"10 May 2026", driver:"Hendra", driverPhone:"6281234567890", pengiriman:"Rp3.500.000", admin:"-Rp20.000", pph:"-Rp69.600", total:"Rp3.410.400", hasSJ: false },
+        { id:"EIP26171", bongkarDate:"16 May 2026", dest:"CV. SINAR GEMILANG - BANJ...", unit:"CDD Box Long", plat:"B 9248 FXR", price:"Rp2.700.000", muat:"12 May 2026", driver:"Bambang", driverPhone:"6282345678901", pengiriman:"Rp2.700.000", admin:"-Rp20.000", pph:"-Rp53.600", total:"Rp2.626.400", hasSJ: false },
+        { id:"KSN26194", bongkarDate:"18 May 2026", dest:"PMA Purwakarta", unit:"CDD Box Long", plat:"B 9194 FXV", price:"Rp1.754.278", muat:"14 May 2026", driver:"Agus", driverPhone:"6283456789012", pengiriman:"Rp1.754.278", admin:"-Rp20.000", pph:"-Rp34.685", total:"Rp1.699.593", hasSJ: false },
+        { id:"ENS26362", bongkarDate:"18 May 2026", dest:"AntarMitra Sembada (SBY 2)", unit:"CDD Box", plat:"B 9365 FRX", price:"Rp3.600.000", muat:"15 May 2026", driver:"Rizal", driverPhone:"6284567890123", pengiriman:"Rp3.600.000", admin:"-Rp20.000", pph:"-Rp71.600", total:"Rp3.508.400", hasSJ: false },
+        { id:"KSN26195", bongkarDate:"18 May 2026", dest:"PMA Karawang Anggadita", unit:"CDD Box Long", plat:"B 9248 FXR", price:"Rp1.607.606", muat:"14 May 2026", driver:"Suharto", driverPhone:"6285678901234", pengiriman:"Rp1.607.606", admin:"-Rp20.000", pph:"-Rp31.752", total:"Rp1.555.854", hasSJ: false },
+        { id:"SPK26104", bongkarDate:"18 May 2026", dest:"PT Kaldusari Nabati Rancaekek", unit:"CDD Box Long", plat:"B 9527 FXV", price:"Rp2.840.500", muat:"15 May 2026", driver:"EDWIN", driverPhone:"6289528405284", pengiriman:"Rp2.840.500", admin:"-Rp20.000", pph:"-Rp56.410", total:"Rp2.764.090", hasSJ: false },
+    ],
+    tindakan: [
+        { id:"AZK26159", bongkarDate:"19 Apr 2026", dest:"MITRA10 KEBON SARI MALA...", unit:"CDD Box", plat:"B 9228 TRO", price:"Rp4.076.000", extra:"(+2)", muat:"15 Apr 2026", driver:"Wawan", driverPhone:"6281111111111", pengiriman:"Rp4.076.000", admin:"-Rp20.000", pph:"-Rp81.120", total:"Rp3.974.880", hasSJ: true, actionTag:"✉ Kirimkan SJ" },
+        { id:"AZK26167", bongkarDate:"21 Apr 2026", dest:"MITRA 10 SIDOARJO", unit:"CDD Box Long", plat:"B 9939 FCD", price:"Rp3.557.000", muat:"17 Apr 2026", driver:"Slamet", driverPhone:"6282222222222", pengiriman:"Rp3.557.000", admin:"-Rp20.000", pph:"-Rp70.740", total:"Rp3.466.260", hasSJ: true, actionTag:"✉ Kirimkan SJ" },
+        { id:"AZK26171", bongkarDate:"25 Apr 2026", dest:"MITRA10 BY PASS NGURAH ...", unit:"CDD Box", plat:"B 9257 FXX", price:"Rp7.379.000", extra:"(+2)", muat:"21 Apr 2026", driver:"Dedi", driverPhone:"6283333333333", pengiriman:"Rp7.379.000", admin:"-Rp40.000", pph:"-Rp146.780", total:"Rp7.192.220", hasSJ: true, actionTag:"✉ Kirimkan SJ" },
+        { id:"AZK26179", bongkarDate:"28 Apr 2026", dest:"MITRA10 KEBON SARI MALA...", unit:"CDD Box", plat:"B 9138 VCA", price:"Rp4.174.000", extra:"(+1)", muat:"24 Apr 2026", driver:"Prayitno", driverPhone:"6284444444444", pengiriman:"Rp4.174.000", admin:"-Rp20.000", pph:"-Rp83.080", total:"Rp4.070.920", hasSJ: true, actionTag:"✉ Kirimkan SJ" },
+        { id:"GGP2683",  bongkarDate:"11 May 2026", dest:"PT NSA BALI", unit:"CDD Box Long", plat:"B 9485 FXY", price:"Rp7.310.000", extra:"(+1)", muat:"07 May 2026", driver:"Maman", driverPhone:"6285555555555", pengiriman:"Rp7.310.000", admin:"-Rp40.000", pph:"-Rp145.400", total:"Rp7.124.600", hasSJ: true, actionTag:"✉ Kirimkan SJ" },
+        { id:"SCL26745", bongkarDate:"12 May 2026", dest:"Sociolla Pakuwon Mall (SPM)", unit:"CDD Box Long", plat:"B 9580 FXV", price:"Rp3.508.000", extra:"(+1)", muat:"08 May 2026", driver:"Eko", driverPhone:"6286666666666", pengiriman:"Rp3.508.000", admin:"-Rp20.000", pph:"-Rp69.760", total:"Rp3.418.240", hasSJ: true, actionTag:"✉ Kirimkan SJ" },
+    ],
+    persetujuan: [
+        { id:"SJA26537", bongkarDate:"16 Mar 2026", dest:"FB Serpong", unit:"CDD Box", plat:"B 9316 FXW", price:"Rp2.822.000", muat:"12 Mar 2026", driver:"Wahyu", driverPhone:"6287777777777", pengiriman:"Rp2.822.000", admin:"-Rp20.000", pph:"-Rp56.040", total:"Rp2.745.960", hasSJ: true, actionTag:"✉ Menunggu Nilai Klaim" },
+        { id:"SJA26639", bongkarDate:"13 Apr 2026", dest:"SP Tanjung Pasir", unit:"CDD Box", plat:"B 9490 JM", price:"Rp2.822.000", muat:"09 Apr 2026", driver:"Andi", driverPhone:"6288888888888", pengiriman:"Rp2.822.000", admin:"-Rp20.000", pph:"-Rp56.040", total:"Rp2.745.960", hasSJ: true, actionTag:"✉ Menunggu Nilai Klaim" },
+        { id:"AZK26165", bongkarDate:"17 Apr 2026", dest:"Mitra 10 Pesanggrahan", unit:"CDD Box", plat:"B 9392 BCC", price:"Rp862.000", muat:"14 Apr 2026", driver:"Budi", driverPhone:"6289999999999", pengiriman:"Rp862.000", admin:"-Rp20.000", pph:"-Rp16.840", total:"Rp825.160", hasSJ: true, actionTag:"✉ Menunggu Nilai Klaim" },
+        { id:"SJA26725", bongkarDate:"06 May 2026", dest:"Pergudangan Pilar Bersama M...", unit:"CDD Box Long", plat:"B 9939 FCD", price:"Rp2.724.000", muat:"02 May 2026", driver:"Firman", driverPhone:"6281000000001", pengiriman:"Rp2.724.000", admin:"-Rp20.000", pph:"-Rp54.080", total:"Rp2.649.920", hasSJ: true, actionTag:"✉ Menunggu Nilai Klaim" },
+        { id:"ENS26336", bongkarDate:"07 May 2026", dest:"Antar Mitra Sembada (SBY2)", unit:"CDD Box", plat:"B 9202 KXS", price:"Rp3.571.000", muat:"03 May 2026", driver:"Toni", driverPhone:"6281000000002", pengiriman:"Rp3.571.000", admin:"-Rp20.000", pph:"-Rp71.020", total:"Rp3.479.980", hasSJ: true, actionTag:"✉ Menunggu Nilai Klaim" },
+    ],
+    pembayaran: [
+        { id:"KSN26161", bongkarDate:"28 Feb 2026", dest:"TANGGRANG GT", unit:"CDD Box Long", plat:"B 9194 FXV", price:"Rp490.000", muat:"25 Feb 2026", driver:"Samsul", driverPhone:"6281100000001", pengiriman:"Rp490.000", admin:"-Rp20.000", pph:"-Rp9.400", total:"Rp460.600", hasSJ: true, payDate:"19 May 2026" },
+        { id:"AZK26144", bongkarDate:"31 Mar 2026", dest:"PT Mega Adhitama Sejati Tan...", unit:"CDD Box", plat:"B 9690 FJ", price:"Rp865.840", muat:"27 Mar 2026", driver:"Prasetyo", driverPhone:"6281100000002", pengiriman:"Rp865.840", admin:"-Rp20.000", pph:"-Rp16.917", total:"Rp828.923", hasSJ: true, payDate:"19 May 2026" },
+        { id:"AZK26149", bongkarDate:"04 Apr 2026", dest:"MITRA 10 SIDOARJO", unit:"CDD Box", plat:"B 9316 FXW", price:"Rp2.646.000", muat:"01 Apr 2026", driver:"Surya", driverPhone:"6281100000003", pengiriman:"Rp2.646.000", admin:"-Rp20.000", pph:"-Rp52.520", total:"Rp2.573.480", hasSJ: true, payDate:"19 May 2026" },
+        { id:"JTC26102", bongkarDate:"07 Apr 2026", dest:"J&T Cargo Gateway JKT99A", unit:"CDD Box Long", plat:"B 9580 FXV", price:"Rp1.009.000", muat:"04 Apr 2026", driver:"Hendri", driverPhone:"6281100000004", pengiriman:"Rp1.009.000", admin:"-Rp20.000", pph:"-Rp19.780", total:"Rp969.220", hasSJ: true, payDate:"19 May 2026" },
+        { id:"SJA26615", bongkarDate:"07 Apr 2026", dest:"SP Cileungsi", unit:"CDD Box", plat:"B 9148 FCH", price:"Rp2.822.000", muat:"04 Apr 2026", driver:"Supri", driverPhone:"6281100000005", pengiriman:"Rp2.822.000", admin:"-Rp20.000", pph:"-Rp56.040", total:"Rp2.745.960", hasSJ: true, payDate:"19 May 2026" },
+    ],
+    lunas: [
+        { id:"MWT2635", bongkarDate:"10 Apr 2026", dest:"Site Purwokerto", unit:"CDD Box", plat:"B 9228 TRO", price:"Rp2.853.360", muat:"06 Apr 2026", driver:"Saman", driverPhone:"6281200000001", pengiriman:"Rp2.853.360", admin:"-Rp20.000", pph:"-Rp56.667", total:"Rp2.776.693", hasSJ: true, lunasDt:"12 May 2026" },
+        { id:"BRC2604",  bongkarDate:"11 Apr 2026", dest:"PT Fajar Lestari Abadi", unit:"CDD Box Long", plat:"B 9485 FXY", price:"Rp4.274.000", muat:"07 Apr 2026", driver:"Nugroho", driverPhone:"6281200000002", pengiriman:"Rp4.274.000", admin:"-Rp20.000", pph:"-Rp85.080", total:"Rp4.168.920", hasSJ: true, lunasDt:"12 May 2026" },
+        { id:"MWT2638", bongkarDate:"11 Apr 2026", dest:"PT Catur Sentosa Adiprana Ta...", unit:"CDD Box Long", plat:"B 9580 FXV", price:"Rp2.106.600", muat:"07 Apr 2026", driver:"Mujiono", driverPhone:"6281200000003", pengiriman:"Rp2.106.600", admin:"-Rp20.000", pph:"-Rp41.732", total:"Rp2.044.868", hasSJ: true, lunasDt:"12 May 2026" },
+        { id:"MWT2637", bongkarDate:"11 Apr 2026", dest:"PT Sentosa Daya Segara", unit:"CDD Box", plat:"B 9968 MX", price:"Rp1.891.000", muat:"07 Apr 2026", driver:"Sutrisno", driverPhone:"6281200000004", pengiriman:"Rp1.891.000", admin:"-Rp20.000", pph:"-Rp37.420", total:"Rp1.833.580", hasSJ: true, lunasDt:"12 May 2026" },
+        { id:"EIP26111", bongkarDate:"11 Apr 2026", dest:"PT.UNIRAMA DUTA NIAGA - ...", unit:"CDD Box Long", plat:"B 9327 FXW", price:"Rp6.742.000", muat:"07 Apr 2026", driver:"Sugiarto", driverPhone:"6281200000005", pengiriman:"Rp6.742.000", admin:"-Rp40.000", pph:"-Rp134.040", total:"Rp6.567.960", hasSJ: true, lunasDt:"12 May 2026" },
+        { id:"SCL26608", bongkarDate:"13 Apr 2026", dest:"store SP3 ( Sociolla PIM 3 )", unit:"CDD Box", plat:"B 9261 FRU", price:"Rp932.560", extra:"(+1)", muat:"09 Apr 2026", driver:"Rusman", driverPhone:"6281200000006", pengiriman:"Rp932.560", admin:"-Rp20.000", pph:"-Rp18.251", total:"Rp894.309", hasSJ: true, lunasDt:"12 May 2026" },
+        { id:"SCL26609", bongkarDate:"13 Apr 2026", dest:"Sociolla By The Sea PIK (SPK)", unit:"CDE Box", plat:"B 9354 PRU", price:"Rp695.600", muat:"09 Apr 2026", driver:"Jarwo", driverPhone:"6281200000007", pengiriman:"Rp695.600", admin:"-Rp20.000", pph:"-Rp13.512", total:"Rp662.088", hasSJ: true, lunasDt:"12 May 2026" },
+    ]
+};
+
+let currentInvoice = null;
+let currentFromScreen = 'screen-list-perlu';
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function navigateTo(screenId) {
+    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active-screen'));
+    document.getElementById(screenId).classList.add('active-screen');
+
+    const isList = screenId.startsWith('screen-list');
+    const isDetail = screenId.startsWith('screen-detail');
+    const isSuccess = screenId === 'screen-success';
+
+    document.getElementById('bar-logo').classList.toggle('bar-active', isList);
+    document.getElementById('bar-tabs').classList.toggle('bar-active', isList);
+    document.getElementById('bar-detail').classList.toggle('bar-active', isDetail);
+    document.getElementById('bar-success').classList.toggle('bar-active', isSuccess);
+
+    // scroll to top
+    const scroll = document.getElementById(screenId)?.querySelector('.detail-scroll, .scroll-area');
+    if (scroll) scroll.scrollTop = 0;
+}
+
+// ══════════════════════════════════════════
+// LIST TAB SWITCHING
+// ══════════════════════════════════════════
+function switchListTab(btn, tab) {
+    const screenMap = { perlu:'screen-list-perlu', tindakan:'screen-list-tindakan', persetujuan:'screen-list-persetujuan', pembayaran:'screen-list-pembayaran', lunas:'screen-list-lunas' };
+    navigateTo(screenMap[tab]);
+}
+
+// ══════════════════════════════════════════
+// OPEN DETAIL
+// ══════════════════════════════════════════
+function openInvoice(id, fromScreen) {
+    currentFromScreen = fromScreen;
+    const allData = [...invoiceData.perlu, ...invoiceData.tindakan, ...invoiceData.persetujuan, ...invoiceData.pembayaran, ...invoiceData.lunas];
+    currentInvoice = allData.find(d => d.id === id);
+    if (!currentInvoice) return;
+
+    const inv = currentInvoice;
+
+    if (inv.hasSJ) {
+        // go to detail with SJ
+        document.getElementById('d2-do').textContent = inv.id;
+        document.getElementById('d2-muat').textContent = inv.muat;
+        document.getElementById('d2-bongkar').textContent = inv.bongkarDate;
+        document.getElementById('d2-unit').innerHTML = inv.unit + '<br>' + inv.plat;
+        document.getElementById('d2-driver').innerHTML = inv.driver + '<br>📱 ' + inv.driverPhone;
+        document.getElementById('d2-pengiriman').textContent = inv.pengiriman;
+        document.getElementById('d2-admin').textContent = inv.admin;
+        document.getElementById('d2-pph').textContent = inv.pph;
+        document.getElementById('d2-total').textContent = inv.total;
+        if (inv.bongkarFee) {
+            document.getElementById('d2-bongkar-row').style.display = 'flex';
+            document.getElementById('d2-bongkar-fee').textContent = inv.bongkarFee;
+        } else {
+            document.getElementById('d2-bongkar-row').style.display = 'none';
+        }
+        document.getElementById('back-from-detail').onclick = () => navigateTo(fromScreen);
+        navigateTo('screen-detail-with-sj');
+    } else {
+        // go to detail without SJ
+        document.getElementById('d1-do').textContent = inv.id;
+        document.getElementById('d1-muat').textContent = inv.muat;
+        document.getElementById('d1-bongkar').textContent = inv.bongkarDate;
+        document.getElementById('d1-unit').innerHTML = inv.unit + '<br>' + inv.plat;
+        document.getElementById('d1-driver').innerHTML = inv.driver + '<br>📱 ' + inv.driverPhone;
+        document.getElementById('d1-pengiriman').textContent = inv.pengiriman;
+        document.getElementById('d1-admin').textContent = inv.admin;
+        document.getElementById('d1-pph').textContent = inv.pph;
+        document.getElementById('back-from-detail').onclick = () => navigateTo(fromScreen);
+        navigateTo('screen-detail-no-sj');
+    }
+}
+
+// ══════════════════════════════════════════
+// UPLOAD SHEET
+// ══════════════════════════════════════════
+function showUploadSheet() {
+    document.getElementById('sheet-overlay').classList.add('visible');
+    setTimeout(() => document.getElementById('upload-sheet').classList.add('visible'), 10);
+}
+function hideUploadSheet() {
+    document.getElementById('upload-sheet').classList.remove('visible');
+    setTimeout(() => document.getElementById('sheet-overlay').classList.remove('visible'), 300);
+}
+function uploadAndProceed() {
+    hideUploadSheet();
+    if (!currentInvoice) return;
+    currentInvoice.hasSJ = true;
+    setTimeout(() => openInvoice(currentInvoice.id, currentFromScreen), 350);
+}
+
+// ══════════════════════════════════════════
+// SUBMIT INVOICE
+// ══════════════════════════════════════════
+function submitInvoice() {
+    if (!currentInvoice) return;
+    document.getElementById('success-do-box').textContent = 'DO: ' + currentInvoice.id + ' · ' + currentInvoice.dest;
+    navigateTo('screen-success');
+}
+
+// ══════════════════════════════════════════
+// RENDER LISTS
+// ══════════════════════════════════════════
+function renderList(containerId, items, fromScreen) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = items.map(inv => {
+        let rightTag = '';
+        if (inv.payDate) rightTag = `<span class="payment-tag">📅 Akan dibayarkan pada ${inv.payDate}</span>`;
+        else if (inv.lunasDt) rightTag = `<span class="lunas-tag">✓ Lunas pada ${inv.lunasDt}</span>`;
+        else if (inv.actionTag) rightTag = `<span class="status-tag status-klaim">${inv.actionTag}</span>`;
+        else rightTag = `<span class="status-tag status-belum">Belum Diajukan</span>`;
+
+        const badgeClass = inv.lunasDt ? 'badge-teal' : (inv.payDate ? 'badge-teal' : (inv.actionTag ? 'badge-orange' : 'badge-red'));
+
+        return `<div class="inv-card" onclick="openInvoice('${inv.id}','${fromScreen}')">
+            <div class="inv-card-header">
+                <span class="inv-badge ${badgeClass}">${inv.id}</span>
+                ${rightTag}
+            </div>
+            <div class="inv-card-row">
+                <span class="inv-meta">Bongkar ${inv.bongkarDate} &bull; ${inv.dest}${inv.extra ? ' <span style="font-size:10px;color:#94a3b8;">'+inv.extra+'</span>' : ''}</span>
+            </div>
+            <div class="inv-card-row" style="margin-top:4px;">
+                <span class="inv-meta">${inv.unit} - ${inv.plat}</span>
+                <span class="inv-price">${inv.price}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+renderList('list-perlu', invoiceData.perlu, 'screen-list-perlu');
+renderList('list-tindakan', invoiceData.tindakan, 'screen-list-tindakan');
+renderList('list-persetujuan', invoiceData.persetujuan, 'screen-list-persetujuan');
+renderList('list-pembayaran', invoiceData.pembayaran, 'screen-list-pembayaran');
+renderList('list-lunas', invoiceData.lunas, 'screen-list-lunas');
+
+navigateTo('screen-list-perlu');
+</script>
+</body>
+</html>

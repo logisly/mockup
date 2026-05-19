@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOGISLY - Live Flow Prototype</title>
+    <style>
+        :root {
+            --primary-teal: #00b4bd;
+            --primary-orange: #f59e0b;
+            --bg-light: #f4f7f6;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+            --card-border: #e2e8f0;
+            --btn-disabled: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        /* Smartphone Frame Device Wrapper */
+        .phone-wrapper {
+            width: 390px;
+            height: 844px;
+            background-color: var(--bg-light);
+            border: 12px solid #000000;
+            border-radius: 44px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 156px;
+            height: 28px;
+            background-color: #000000;
+            border-bottom-left-radius: 18px;
+            border-bottom-right-radius: 18px;
+            z-index: 10000;
+        }
+
+        /* App Navbar Header Layout */
+        .app-bar {
+            background-color: var(--primary-teal);
+            padding: 40px 16px 12px 16px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            color: #ffffff;
+            position: relative;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .app-bar.bar-active {
+            display: flex;
+        }
+
+        .app-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+
+        .app-title {
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-priority {
+            background-color: var(--primary-orange);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-transform: uppercase;
+        }
+
+        .header-icons-right {
+            display: flex;
+            gap: 16px;
+            font-size: 18px;
+            color: #ffffff;
+            align-items: center;
+        }
+
+        /* Viewport Layout */
+        .viewport-content {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-screen {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+
+        .app-screen.active-screen {
+            display: flex;
+        }
+
+        /* 1. LOGIN SCREEN STYLING */
+        .login-screen-bg {
+            background: linear-gradient(180deg, rgba(0, 140, 148, 0.75) 0%, rgba(11, 62, 66, 0.9) 100%), 
+                        url('https://images.unsplash.com/photo-1516594798947-e65505dbb29d?q=80&w=600') no-repeat center center;
+            background-size: cover;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 90px 0 20px 0;
+            position: relative;
+        }
+
+        .login-logo-area {
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .login-logo-headline {
+            font-size: 36px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        .login-logo-sub {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        .login-bottom-sheet {
+            background-color: #ffffff;
+            border-top-left-radius: 28px;
+            border-top-right-radius: 28px;
+            padding: 32px 24px 40px 24px;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.2);
+        }
+
+        .login-sheet-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #475569;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .input-group-row {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .login-text-input {
+            width: 100%;
+            padding: 12px 4px;
+            border: none;
+            border-bottom: 1px solid #cbd5e1;
+            font-size: 15px;
+            outline: none;
+            color: #1e293b;
+            transition: border-color 0.2s;
+        }
+
+        .login-text-input:focus {
+            border-bottom-color: var(--primary-teal);
+        }
+
+        .password-toggle-eye {
+            position: absolute;
+            right: 8px;
+            top: 12px;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-teal-action {
+            background-color: var(--primary-teal);
+            color: #ffffff;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .login-help-link {
+            display: block;
+            text-align: center;
+            color: var(--primary-teal);
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 20px;
+            text-decoration: none;
+        }
+
+        .login-footer-branding {
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            padding: 10px;
+            margin-top: auto;
+        }
+
+        /* 2. ORDER DETAILS VIEW STYLING */
+        .detail-body-container {
+            padding: 16px;
+        }
+
+        .main-shipper-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 800;
+            color: #1e293b;
+            line-height: 1.4;
+            margin-bottom: 16px;
+            padding: 0 8px;
+        }
+
+        .block-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+        }
+
+        .timeline-row {
+            display: flex;
+            gap: 12px;
+            align-items: center; 
+            margin-bottom: 4px;
+        }
+
+        .symbol-wrapper-inline {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .sym-load { background-color: #0d9488; }
+        .sym-unload { background-color: #475569; }
+
+        .location-header-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .address-paragraph-detail {
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.4;
+            margin-left: 34px;
+            margin-bottom: 6px;
+        }
+
+        .date-stamp-line {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-left: 34px;
+        }
+
+        .specification-grid-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+        .specification-grid-row:last-child { border-bottom: none; }
+        .label-muted { color: var(--text-muted); }
+        .value-bold { font-weight: 600; color: #1e293b; }
+
+        .price-summary-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 0 4px;
+        }
+
+        .large-price-tag {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary-orange);
+        }
+
+        .countdown-alert-text {
+            color: #ef4444;
+            font-weight: 700;
+            font-size: 15px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .button-layout-centered-container {
+            padding: 0 4px;
+            margin-bottom: 16px;
+        }
+
+        /* Footer Utilities Buttons */
+        .dual-footer-actions-container {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 16px;
+            margin-top: 8px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-utility-btn-node {
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .utility-icon-circleframe {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background-color 0.2s;
+        }
+
+        .footer-utility-btn-node:active .utility-icon-circleframe {
+            background-color: #e2e8f0;
+        }
+
+        /* 3. OPEN ORDERS LIST / DASHBOARD STYLING */
+        .tab-navigation-bar {
+            background-color: var(--primary-teal);
+            display: flex;
+            padding: 0 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 14px 2px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tab-item.tab-active {
+            color: #ffffff;
+            border-bottom-color: #ffffff;
+        }
+
+        .filter-ribbon {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #ffffff;
+            gap: 8px;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .date-capsule-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .date-capsule {
+            padding: 6px 14px;
+            border: 1px solid var(--primary-teal);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--primary-teal);
+            background: #ffffff;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .date-capsule.capsule-active {
+            background: var(--primary-teal);
+            color: #ffffff;
+        }
+
+        .spx-toggle-container {
+            display: flex;
+            background: #edf2f7;
+            padding: 2px;
+            border-radius: 6px;
+        }
+
+        .spx-toggle-btn {
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            border: none;
+            color: var(--text-muted);
+            background: transparent;
+        }
+
+        .spx-toggle-btn.toggle-active {
+            background: #ffffff;
+            color: var(--primary-teal);
+        }
+
+        .search-box-container {
+            padding: 10px 16px;
+            width: 100%;
+        }
+
+        .search-input-field {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            background: #ffffff;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .orders-vertical-stack {
+            padding: 4px 16px 32px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dashboard-order-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .dashboard-order-card:active {
+            background-color: #f8fafc;
+        }
+
+        .dashboard-order-card.processed-state {
+            opacity: 0.5;
+            border-left: 3px solid #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .card-row-headline {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .company-name-text {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .price-text-highlight {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary-teal);
+        }
+
+        .route-sub-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .fleet-tag-label {
+            font-size: 11px;
+            color: #64748b;
+            text-align: right;
+            display: block;
+        }
+
+        /* Empty State Module */
+        .empty-state-wrapper {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px;
+            text-align: center;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .empty-state-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* 4. FLEET SELECTION & CONFIRMATION MECHANICS */
+        .countdown-strip-banner {
+            background-color: #ef4444;
+            color: #ffffff;
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .allocation-fleet-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 14px;
+            margin: 0 16px 10px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .allocation-fleet-card.card-selected {
+            border-color: var(--primary-teal);
+            background-color: #f0fdfa;
+        }
+
+        .checkbox-container-mock {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+            background: #ffffff;
+        }
+
+        .allocation-fleet-card.card-selected .checkbox-container-mock {
+            background-color: var(--primary-teal);
+            border-color: var(--primary-teal);
+        }
+
+        .allocation-fleet-card.card-selected .checkbox-container-mock::after {
+            content: '✓';
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .fleet-description-block h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .fleet-description-block p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .fleet-phone-link {
+            font-size: 12px;
+            color: var(--primary-teal);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        /* BUTTONS STYLING */
+        .action-button-orange {
+            background-color: var(--primary-orange);
+            color: #ffffff;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
+            display: block;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+        }
+
+        .action-button-outline {
+            background: #ffffff;
+            color: var(--primary-teal);
+            border: 1px solid var(--primary-teal);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            display: block;
+        }
+
+        /* GLOBAL OVERLAY LAYERS */
+        .app-modal-layer {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(15, 23, 42, 0.6);
+            z-index: 2000;
+            display: none;
+            align-items: flex-end;
+        }
+
+        .bottom-sheet-modal {
+            background-color: #ffffff;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-headline-title {
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .radio-selection-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .radio-node-circle {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .radio-selection-row.radio-selected .radio-node-circle {
+            border-color: var(--primary-teal);
+        }
+
+        .radio-selection-row.radio-selected .radio-node-circle::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background-color: var(--primary-teal);
+            border-radius: 50%;
+        }
+
+        .custom-reason-input {
+            width: 100%;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            display: none;
+            outline: none;
+        }
+
+        .centered-alert-box {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            width: 85%;
+            margin: auto;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+            display: none;
+        }
+
+        .success-state-icon {
+            width: 72px;
+            height: 72px;
+            background-color: #0d9488;
+            color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 32px auto 20px auto;
+        }
+
+        .system-nav-handle {
+            width: 134px;
+            height: 5px;
+            background-color: #000000;
+            border-radius: 10px;
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-wrapper">
+        <div class="phone-notch"></div>
+
+        <!-- Shared Global Navbar Header -->
+        <div class="app-bar" id="globalAppBar">
+            <div class="app-bar-left">
+                <button class="back-button" id="masterBackBtn">←</button>
+                <span class="app-title" id="masterHeaderTitle">LOGISLY</span>
+            </div>
+            <div class="badge-priority" id="masterPriorityBadge">★ Priority Order</div>
+            <div class="header-icons-right" id="masterHeaderIcons">
+                <span>🔍</span>
+                <span>⚙</span>
+            </div>
+        </div>
+
+        <div class="viewport-content" id="masterViewportScrollNode">
+
+            <!-- SCREEN 1: LOGIN PAGE SCREEN (BOOT SEQUENCE ENTRY POINT) -->
+<div id="screen-login" class="app-screen active-screen">
+                <div class="login-screen-bg">
+                    <div class="login-logo-area">
+                        <h1 class="login-logo-headline">LOGISLY</h1>
+                        <p class="login-logo-sub">Transporter</p>
+                    </div>
+
+                    <div class="login-footer-branding">
+                        PT Logistik Pintar Indonesia
+                    </div>
+
+                    <div class="login-bottom-sheet">
+                        <div class="login-sheet-title">Masukan username dan password</div>
+                        
+                        <div class="input-group-row">
+                            <input type="text" id="loginUserField" class="login-text-input" placeholder="Username" onclick="prefillCredentials()">
+                        </div>
+                        <div class="input-group-row">
+                            <input type="password" id="loginPassField" class="login-text-input" placeholder="Password" value="" onclick="prefillCredentials()">
+                            <span class="password-toggle-eye">👁</span>
+                        </div>
+
+                        <button class="btn-teal-action" onclick="processLoginAuthentication()">Masuk</button>
+                        <a href="#" class="login-help-link">Butuh bantuan?</a>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- SCREEN 2: INITIAL PAGE SHOWN IMMEDIATELY AFTER LOGGING IN (Order Details Page) -->
+            <div id="screen-detail" class="app-screen">
+                <div class="detail-body-container">
+                    <div class="main-shipper-title" id="dyn-detail-shipper">PROCTER & GAMBLE HOME PRODUCT INDONESIA</div>
+                    
+                    <div class="block-card">
+                        <div class="timeline-row">
+                            <div class="symbol-wrapper-inline sym-load">↑</div>
+                            <span class="location-header-title">Lokasi Muat</span>
+                        </div>
+                        <p class="address-paragraph-detail" id="dyn-detail-load-loc">Gambir Station, Jalan Medan Merdeka Timur, Gambir, Central Jakarta City, Jakarta, Indonesia</p>
+                        <div class="date-stamp-line" style="margin-bottom: 16px;" id="dyn-detail-load-date">🕒 09 Mar 2023</div>
+
+                        <div class="timeline-row">
+                            <div class="symbol-wrapper-inline sym-unload">↓</div>
+                            <span class="location-header-title">Lokasi Bongkar</span>
+                        </div>
+                        <p class="address-paragraph-detail" id="dyn-detail-unload-loc">Pasar Turi Station, Semarang Street, Gundih, Surabaya City, East Java, Indonesia</p>
+                        <div class="date-stamp-line" id="dyn-detail-unload-date">🕒 10 Mar 2023</div>
+                    </div>
+
+                    <div class="block-card">
+                        <div class="specification-grid-row"><span class="label-muted">Armada</span><span class="value-bold" id="dyn-detail-fleet">1 unit CDD Box</span></div>
+                        <div class="specification-grid-row"><span class="label-muted">Barang</span><span class="value-bold" id="dyn-detail-item">Kemasan Prioritas</span></div>
+                        <div class="specification-grid-row"><span class="label-muted">Berat Muatan</span><span class="value-bold" id="dyn-detail-weight">4,00 Ton</span></div>
+                    </div>
+
+                    <div class="price-summary-container">
+                        <span style="font-size: 15px; font-weight: 600; color: #475569;">Harga</span>
+                        <!-- CHANGED THE PRICE FROM 500.000 TO 3.300.000 -->
+                        <span class="large-price-tag" id="dyn-detail-price">Rp3.300.000</span>
+                    </div>
+
+                    <div class="countdown-alert-text">Berakhir dalam 14 : 50</div>
+
+                    <div class="button-layout-centered-container">
+                        <button class="action-button-orange" onclick="navigateRoute('screen-allocate')">Alokasikan Unit</button>
+                    </div>
+
+                    <!-- Clean Balanced Bottom Interaction Icons Bar matching layout specs -->
+                    <div class="dual-footer-actions-container">
+                        <button class="footer-utility-btn-node" onclick="triggerRejectOverlay(true)">
+                            <div class="utility-icon-circleframe" style="color: #ef4444; background-color: #fef2f2;">✕</div>
+                            Tolak Order
+                        </button>
+                        <button class="footer-utility-btn-node" onclick="triggerRemindOverlay(true)">
+                            <div class="utility-icon-circleframe" style="color: var(--primary-teal); background-color: #f0fdfa;">🔔</div>
+                            Ingatkan Nanti
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: ALLOCATE FLEET ASSIGNMENT -->
+            <div id="screen-allocate" class="app-screen">
+                <div class="countdown-strip-banner">Alokasikan unit Anda! dalam waktu 14 : 21</div>
+                <div class="search-box-container" style="padding-top:14px; padding-bottom:4px;">
+                    <input type="text" class="search-input-field" placeholder="🔍 Cari Armada">
+                </div>
+                <div style="font-size: 13px; font-weight: 700; padding: 10px 16px; color:#475569;">Pastikan unit tersedia pada tanggal muat</div>
+
+                <div style="flex: 1; overflow-y: auto;">
+                    <div class="allocation-fleet-card" onclick="selectFleetCard(this, 'B 6655 FH', 'Trgh', '+62 855 225 558 8')">
+                        <div class="checkbox-container-mock"></div>
+                        <div class="fleet-description-block">
+                            <h4>B 6655 FH <strong class="dyn-alloc-type-label">CDD Box</strong></h4>
+                            <p>Trgh</p>
+                            <div class="fleet-phone-link">📞 +62 855 225 558 8</div>
+                        </div>
+                    </div>
+                    <div class="allocation-fleet-card" id="auto-focused-truck" onclick="selectFleetCard(this, 'GG 4574 FGD', 'Hhaha', '+62 800 000 000 0')">
+                        <div class="checkbox-container-mock"></div>
+                        <div class="fleet-description-block">
+                            <h4>GG 4574 FGD <strong class="dyn-alloc-type-label">CDD Box</strong></h4>
+                            <p>Hhaha</p>
+                            <div class="fleet-phone-link">📞 +62 800 000 000 0</div>
+                        </div>
+                    </div>
+                    <div class="allocation-fleet-card" onclick="selectFleetCard(this, 'JJ 5757 GHJ', 'Ekanama', '+62 800 000 000 00')">
+                        <div class="checkbox-container-mock"></div>
+                        <div class="fleet-description-block">
+                            <h4>JJ 5757 GHJ <strong class="dyn-alloc-type-label">CDD Box</strong></h4>
+                            <p>Ekanama</p>
+                            <div class="fleet-phone-link">📞 +62 800 000 000 00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="padding: 16px;">
+                    <button class="action-button-orange" onclick="navigateRoute('screen-confirm')">Konfirmasi Unit</button>
+                </div>
+            </div>
+
+            <!-- SCREEN 4: VERIFICATION FINAL SUMMARY CHECKPOINT -->
+            <div id="screen-confirm" class="app-screen">
+                <div class="countdown-strip-banner">Alokasikan unit Anda! dalam waktu 14 : 06</div>
+                
+                <div class="detail-body-container" style="padding-top:14px;">
+                    <h3 style="font-size: 13px; margin-bottom: 8px; font-weight: 700; color: #475569;">Informasi Unit</h3>
+                    <div class="block-card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <span style="font-size:12px; color:var(--text-muted);">Nopol</span>
+                            <div style="font-weight:700; font-size:14px; color:#1e293b;" id="summary-display-nopol">GG 4574 FGD</div>
+                        </div>
+                        <div>
+                            <span style="font-size:12px; color:var(--text-muted);">Jenis Armada</span>
+                            <div style="font-weight:700; font-size:14px; color:#1e293b;" id="summary-display-fleet-type">CDD Box</div>
+                        </div>
+                        <div style="grid-column: span 2; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+                            <span style="font-size:12px; color:var(--text-muted);">Driver</span>
+                            <div style="font-weight:700; font-size:14px; color:#1e293b;" id="summary-display-driver">Hhaha</div>
+                            <div style="font-size:12px; color:var(--primary-teal);" id="summary-display-phone">📞 +62 800 000 000 0</div>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 13px; margin-bottom: 8px; font-weight: 700; color: #475569;">Rincian Order</h3>
+                    <div class="block-card">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px;">
+                            <div>
+                                <span style="font-size:12px; color:var(--text-muted);">Jenis Armada</span>
+                                <div style="font-weight:600; font-size:13px; color:#1e293b;" id="summary-order-fleet">CDD Box</div>
+                            </div>
+                            <div>
+                                <span style="font-size:12px; color:var(--text-muted);">Jumlah Armada</span>
+                                <div style="font-weight:600; font-size:13px; color:#1e293b;">1</div>
+                            </div>
+                            <div>
+                                <span style="font-size:12px; color:var(--text-muted);">Nama Barang</span>
+                                <div style="font-weight:600; font-size:13px; color:#1e293b;" id="summary-order-item">Kemasan Prioritas</div>
+                            </div>
+                            <div>
+                                <span style="font-size:12px; color:var(--text-muted);">Berat Muatan</span>
+                                <div style="font-weight:600; font-size:13px; color:#1e293b;" id="summary-order-weight">4 ton</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="block-card" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size:14px;">Harga</span>
+                        <span style="font-size: 20px; font-weight: 800; color: var(--primary-orange);" id="summary-order-price">Rp3.300.000</span>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top: 20px;">
+                        <button class="action-button-orange" onclick="executeOrderPipelineSuccess()">Ambil Order</button>
+                        <button class="action-button-outline" onclick="navigateRoute('screen-allocate')">Ganti Unit</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 5: SUCCESS ACKNOWLEDGEMENT SCREEN -->
+            <div id="screen-success" class="app-screen" style="padding: 16px;">
+                <div class="success-state-icon">✓</div>
+                <div style="font-size: 18px; font-weight: 800; text-align: center; color: #1e293b; margin-bottom: 6px;">Selamat! order ini milik Anda</div>
+                <div style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px; padding: 0 16px; line-height:1.4;">Pastikan armada Anda tiba dilokasi muat tepat waktu</div>
+
+                <button class="action-button-outline" style="margin-top: auto;" onclick="navigateRoute('screen-dashboard')">Lihat Daftar Order</button>
+            </div>
+
+            <!-- SCREEN 6: OPEN ORDERS DASHBOARD STACK LIST (open.jpeg & filter behaviors) -->
+            <div id="screen-dashboard" class="app-screen">
+                <div class="tab-navigation-bar">
+                    <div class="tab-item tab-active">OPEN ORDERS</div>
+                    <div class="tab-item">ORDER & SURAT JALAN</div>
+                    <div class="tab-item">INVOICE</div>
+                    <div class="tab-item">ARMADA</div>
+                </div>
+                
+                <div class="filter-ribbon">
+                    <div class="date-capsule-group">
+                        <span class="date-capsule capsule-active" id="btn-filter-hari" onclick="switchDateFilter(this, 'hari-ini')">Hari Ini</span>
+                        <span class="date-capsule" id="btn-filter-besok" onclick="switchDateFilter(this, 'besok')">Besok</span>
+                        <span class="date-capsule" id="btn-filter-lusa" onclick="switchDateFilter(this, 'lusa')">Lusa</span>
+                    </div>
+                    <div class="spx-toggle-container">
+                        <button class="spx-toggle-btn toggle-active">Non-SPX</button>
+                        <button class="spx-toggle-btn">SPX</button>
+                    </div>
+                </div>
+
+                <div class="search-box-container">
+                    <input type="text" class="search-input-field" placeholder="🔍 Search Orders">
+                </div>
+
+                <!-- Empty State Module -->
+                <div class="empty-state-wrapper" id="dashboardEmptyState">
+                    <div class="empty-state-title">Tidak Ada Open Order</div>
+                    <div class="empty-state-subtitle">Daftar open order akan tampil disini.</div>
+                </div>
+
+                <div class="orders-vertical-stack" id="dashboard-items-container">
+                    <!-- Cards injected live dynamically below -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- GLOBAL INTERACTIVE POPUP / MODAL OVERLAYS -->
+        <div id="masterModalOverlay" class="app-modal-layer" onclick="handleOutsideModalClick(event)">
+            
+            <!-- Rejection Sheet Form Component -->
+            <div id="rejectionSheetSubpanel" class="bottom-sheet-modal" onclick="event.stopPropagation()">
+                <div class="modal-headline-title">Alasan Penolakan</div>
+                
+                <div class="radio-selection-row" onclick="selectRejectionRadio(this, 'truk')">
+                    <div class="radio-node-circle"></div>
+                    <span>Truk tidak tersedia</span>
+                </div>
+                <div class="radio-selection-row" onclick="selectRejectionRadio(this, 'harga')">
+                    <div class="radio-node-circle"></div>
+                    <span>Harga tidak sesuai</span>
+                </div>
+                <div class="radio-selection-row" onclick="selectRejectionRadio(this, 'lainnya')">
+                    <div class="radio-node-circle"></div>
+                    <span>Lainnya</span>
+                </div>
+
+                <input type="text" id="rejectionTextfieldNode" class="custom-reason-input" placeholder="Tuliskan alasan penolakan disini">
+
+                <button class="action-button-orange" style="background-color: var(--primary-teal); margin-top: 8px; box-shadow:none;" onclick="submitRejectionPipeline()">Kirim</button>
+            </div>
+
+            <!-- Reminder Dialog Prompt Component ("Ingatkan Nanti") -->
+            <div id="remindAlertBoxSubpanel" class="centered-alert-box" onclick="event.stopPropagation()">
+                <div style="font-size: 36px; margin-bottom: 8px;">🔔</div>
+                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color:#1e293b;">Notifikasi</h3>
+                <!-- MODAL POPUP MESSAGE SPECIFIED BY THE USER -->
+                <p style="font-size: 13px; color: #475569; margin-bottom: 20px;">Anda akan diingatkan 5 menit kedepan</p>
+                <button class="action-button-orange" style="padding: 10px 24px; width:auto; min-width:100px; display:inline-block; box-shadow:none;" onclick="triggerRemindOverlay(false)">OK</button>
+            </div>
+
+        </div>
+
+        <div class="system-nav-handle"></div>
+    </div>
+
+    <script>
+        // High-Fidelity Data Registry Matrix corresponding to all the provided screenshots
+        const ordersDataRegistry = {
+            "hari-ini": [
+                {
+                    id: "order_001",
+                    shipper: "PROCTER & GAMBLE HOME PRODUCT INDONESIA",
+                    loadLoc: "Gambir Station, Jalan Medan Merdeka Timur, Gambir, Central Jakarta City, Jakarta, Indonesia",
+                    loadDate: "09 Mar 2023",
+                    unloadLoc: "Pasar Turi Station, Semarang Street, Gundih, Surabaya City, East Java, Indonesia",
+                    unloadDate: "10 Mar 2023",
+                    fleet: "CDD Box",
+                    item: "Kemasan Prioritas",
+                    weight: "4,00 Ton",
+                    price: "Rp3.300.000",
+                    shortRoute: "Gambir 07:00 → Surabaya",
+                    tagLabel: "CDD Box 4.00ton",
+                    processed: false,
+                    isPriority: true
+                },
+                {
+                    id: "order_002",
+                    shipper: "Nabati, FMCG",
+                    loadLoc: "Nabati Warehouse Alpha, Bojongsoa, Bandung, Jawa Barat",
+                    loadDate: "12 Mar 2023",
+                    unloadLoc: "Distribution Center Rungkut, Surabaya, Jawa Timur",
+                    unloadDate: "14 Mar 2023",
+                    fleet: "Wingbox",
+                    item: "Bahan Makanan / Snack",
+                    weight: "12,00 Ton",
+                    price: "Rp6.483.750",
+                    shortRoute: "Bandung 07:00 → Surabaya",
+                    tagLabel: "WB 0.1ton",
+                    processed: false,
+                    isPriority: false
+                },
+                {
+                    id: "order_003",
+                    shipper: "PT DUTA SENTOSA YASMIN",
+                    loadLoc: "MM2100 Industrial Block C, Cikarang, Bekasi",
+                    loadDate: "15 Mar 2023",
+                    unloadLoc: "Gudang Penampungan Yasmin, Lahat, Sumatera Selatan",
+                    unloadDate: "19 Mar 2023",
+                    fleet: "Wingbox",
+                    item: "Suku Cadang Manufaktur",
+                    weight: "15,50 Ton",
+                    price: "Rp12.280.000",
+                    shortRoute: "Bekasi 07:00 → Lahat",
+                    tagLabel: "WB 0.1ton",
+                    processed: false,
+                    isPriority: false
+                },
+                {
+                    id: "order_004",
+                    shipper: "Victoria, Produk kesehat...",
+                    loadLoc: "Kawasan Industri Candi Blok V, Ngaliyan, Semarang",
+                    loadDate: "18 Mar 2023",
+                    unloadLoc: "Pusat Grosir Gudang 4B, Bubutan, Surabaya",
+                    unloadDate: "19 Mar 2023",
+                    fleet: "CDD Long Box",
+                    item: "Produk Kesehatan & Sanitizer",
+                    weight: "5,20 Ton",
+                    price: "Rp1.600.000",
+                    shortRoute: "Semarang 08:00 → Surabaya",
+                    tagLabel: "CDDL 0.1ton",
+                    processed: false,
+                    isPriority: false
+                },
+                {
+                    id: "order_005",
+                    shipper: "Unilever, Produk rumah t...",
+                    loadLoc: "Unilever Facility Hub, Cikarang, Bekasi",
+                    loadDate: "20 Mar 2023",
+                    unloadLoc: "Gudang Logistik, Muaro Jambi, Jambi",
+                    unloadDate: "24 Mar 2023",
+                    fleet: "Wingbox",
+                    item: "Homecare Products Fast",
+                    weight: "14,00 Ton",
+                    price: "Rp17.812.500",
+                    shortRoute: "Bekasi 17:00 → Muaro Jambi",
+                    tagLabel: "WB 0.1ton",
+                    processed: false,
+                    isPriority: false
+                },
+                {
+                    id: "order_006",
+                    shipper: "Kawan Lama, Furniture",
+                    loadLoc: "Kawan Lama Warehouse Hub, Jababeka, Bekasi",
+                    loadDate: "22 Mar 2023",
+                    unloadLoc: "Gudang Retail Mitra, Palembang, Sumatera Selatan",
+                    unloadDate: "25 Mar 2023",
+                    fleet: "Fuso Box",
+                    item: "Furnishing Set Cargo",
+                    weight: "8,50 Ton",
+                    price: "Rp9.160.000",
+                    shortRoute: "Bekasi 22:00 → Palembang",
+                    tagLabel: "Fuso Box 0.1ton",
+                    processed: false,
+                    isPriority: false
+                }
+            ],
+            "besok": [
+                {
+                    id: "order_007",
+                    shipper: "CCAI Cibitung, FMCG",
+                    loadLoc: "Coca-Cola Amatil Plant, Cibitung, Bekasi",
+                    loadDate: "Besok, 08:00 WIB",
+                    unloadLoc: "Distribution Point Logistics Hub, Denpasar, Bali",
+                    unloadDate: "Lusa, 14:00 WIB",
+                    fleet: "Wingbox",
+                    item: "Beverages FMCG Cargo",
+                    weight: "14,00 Ton",
+                    price: "Rp12.400.000",
+                    shortRoute: "Bekasi 08:00 → Denpasar",
+                    tagLabel: "WB 0.1ton",
+                    processed: false,
+                    isPriority: false
+                },
+                {
+                    id: "order_008",
+                    shipper: "CCAI Cibitung, FMCG",
+                    loadLoc: "Coca-Cola Amatil Plant, Cibitung, Bekasi",
+                    loadDate: "Besok, 08:00 WIB",
+                    unloadLoc: "Distribution Point Logistics Hub, Denpasar, Bali",
+                    unloadDate: "Lusa, 14:00 WIB",
+                    fleet: "Wingbox",
+                    item: "Beverages FMCG Cargo",
+                    weight: "14,00 Ton",
+                    price: "Rp12.400.000",
+                    shortRoute: "Bekasi 08:00 → Denpasar",
+                    tagLabel: "WB 0.1ton",
+                    processed: false,
+                    isPriority: false
+                },
+                {
+                    id: "order_009",
+                    shipper: "CCAI Cibitung, FMCG",
+                    loadLoc: "Coca-Cola Amatil Plant, Cibitung, Bekasi",
+                    loadDate: "Besok, 08:00 WIB",
+                    unloadLoc: "Distribution Point Logistics Hub, Denpasar, Bali",
+                    unloadDate: "Lusa, 14:00 WIB",
+                    fleet: "Wingbox",
+                    item: "Beverages FMCG Cargo",
+                    weight: "14,00 Ton",
+                    price: "Rp12.400.000",
+                    shortRoute: "Bekasi 08:00 → Denpasar",
+                    tagLabel: "WB 0.1ton",
+                    processed: false,
+                    isPriority: false
+                }
+            ],
+            "lusa": [] // Triggers the correct clean empty state view as requested
+        };
+
+        let activeFilterKey = "hari-ini";
+        let activeOrderId = "order_001";
+
+        // Prefill credential trigger on input row interaction click
+        function prefillCredentials() {
+            document.getElementById('loginUserField').value = "transporter_logisly";
+            document.getElementById('loginPassField').value = "•••••••••••••";
+        }
+
+        // Handle authenticate login transition sequence
+        function processLoginAuthentication() {
+            const userVal = document.getElementById('loginUserField').value;
+            if(userVal === "") {
+                prefillCredentials();
+            }
+            // Navigate directly to the first layout page state requested: Order Details
+            selectAndLoadOrderData("order_001");
+        }
+
+        // Navigation state machine manager
+        function navigateRoute(targetScreenId) {
+            document.querySelectorAll('.app-screen').forEach(view => view.classList.remove('active-screen'));
+            
+            const targetViewNode = document.getElementById(targetScreenId);
+            if(targetViewNode) targetViewNode.classList.add('active-screen');
+
+            // Scroll container up cleanly
+            document.getElementById('masterViewportScrollNode').scrollTop = 0;
+
+            const appBar = document.getElementById('globalAppBar');
+            const backBtn = document.getElementById('masterBackBtn');
+            const titleNode = document.getElementById('masterHeaderTitle');
+            const badgeNode = document.getElementById('masterPriorityBadge');
+            const iconsNode = document.getElementById('masterHeaderIcons');
+
+            // Navbar layout state switches
+            if (targetScreenId === 'screen-login') {
+                appBar.classList.remove('bar-active');
+            } else {
+                appBar.classList.add('bar-active');
+
+                if (targetScreenId === 'screen-detail') {
+                    backBtn.style.visibility = 'hidden';
+                    titleNode.innerText = 'LOGISLY';
+                    
+                    // Match visual badge view if current order is priority status type
+                    const currentOrder = findOrderByIdGlobal(activeOrderId);
+                    badgeNode.style.display = (currentOrder && currentOrder.isPriority) ? 'inline-flex' : 'none';
+                    iconsNode.style.display = 'none';
+                } else if (targetScreenId === 'screen-allocate') {
+                    backBtn.style.visibility = 'visible';
+                    titleNode.innerText = 'Alokasikan Unit';
+                    badgeNode.style.display = 'none';
+                    iconsNode.style.display = 'none';
+                    backBtn.onclick = () => navigateRoute('screen-detail');
+                } else if (targetScreenId === 'screen-confirm') {
+                    backBtn.style.visibility = 'visible';
+                    titleNode.innerText = 'Konfirmasi Order';
+                    badgeNode.style.display = 'none';
+                    iconsNode.style.display = 'none';
+                    backBtn.onclick = () => navigateRoute('screen-allocate');
+                } else if (targetScreenId === 'screen-success') {
+                    backBtn.style.visibility = 'hidden';
+                    titleNode.innerText = 'LOGISLY';
+                    badgeNode.style.display = 'none';
+                    iconsNode.style.display = 'none';
+                } else if (targetScreenId === 'screen-dashboard') {
+                    backBtn.style.visibility = 'hidden';
+                    titleNode.innerText = 'Open Orders';
+                    badgeNode.style.display = 'none';
+                    iconsNode.style.display = 'flex';
+                    renderDashboardStack();
+                }
+            }
+        }
+
+        // Helper locator tool inside data object hierarchy
+        function findOrderByIdGlobal(id) {
+            for (const key in ordersDataRegistry) {
+                const match = ordersDataRegistry[key].find(o => o.id === id);
+                if (match) return match;
+            }
+            return null;
+            renderDashboardStack();
+        }
+
+        function selectAndLoadOrderData(id) {
+            activeOrderId = id;
+            const order = findOrderByIdGlobal(id);
+            if (!order) return;
+
+            // Populate the specific card details container smoothly
+            document.getElementById('dyn-detail-shipper').innerText = order.shipper;
+            document.getElementById('dyn-detail-load-loc').innerText = order.loadLoc;
+            document.getElementById('dyn-detail-unload-loc').innerText = order.unloadLoc;
+            document.getElementById('dyn-detail-load-date').innerText = `🕒 ${order.loadDate}`;
+            document.getElementById('dyn-detail-unload-date').innerText = `🕒 ${order.unloadDate}`;
+            document.getElementById('dyn-detail-fleet').innerText = `1 unit ${order.fleet}`;
+            document.getElementById('dyn-detail-item').innerText = order.item;
+            document.getElementById('dyn-detail-weight').innerText = order.weight;
+            document.getElementById('dyn-detail-price').innerText = order.price;
+
+            // Update parameters inside the child allocation cards labels
+            document.querySelectorAll('.dyn-alloc-type-label').forEach(label => {
+                label.innerText = order.fleet;
+            });
+
+            // Map content directly onto final checkpoint summary parameters screen fields
+            document.getElementById('summary-order-fleet').innerText = order.fleet;
+            document.getElementById('summary-order-item').innerText = order.item;
+            document.getElementById('summary-order-weight').innerText = order.weight;
+            document.getElementById('summary-order-price').innerText = order.price;
+
+            navigateRoute('screen-detail');
+        }
+
+        // Date Tabs switching processor
+        function switchDateFilter(element, dateKey) {
+            document.querySelectorAll('.date-capsule').forEach(cap => cap.classList.remove('capsule-active'));
+            element.classList.add('capsule-active');
+            activeFilterKey = dateKey;
+            renderDashboardStack();
+        }
+
+        // List builder UI engine loop mapping out the cards layout
+        function renderDashboardStack() {
+            const container = document.getElementById('dashboard-items-container');
+            const emptyState = document.getElementById('dashboardEmptyState');
+            const stackDataList = ordersDataRegistry[activeFilterKey];
+
+            container.innerHTML = "";
+
+            if (!stackDataList || stackDataList.length === 0) {
+                emptyState.style.display = "flex";
+                return;
+            }
+
+            emptyState.style.display = "none";
+
+            stackDataList.forEach(order => {
+                const card = document.createElement('div');
+                card.className = `dashboard-order-card ${order.processed ? 'processed-state' : ''}`;
+                
+                // Clicking pulls details context parameters back forward safely
+                card.onclick = () => {
+                    if(!order.processed) {
+                        selectAndLoadOrderData(order.id);
+                    }
+                };
+
+                card.innerHTML = `
+                    <div class="card-row-headline">
+                        <span class="company-name-text" style="${order.isPriority ? 'color: var(--primary-orange); font-weight:800;' : ''}">
+                            ${order.isPriority ? '★ ' : ''}${order.shipper} ${order.processed ? '(Processed)' : ''}
+                        </span>
+                        <span class="price-text-highlight" style="${order.processed ? 'color: var(--text-muted);' : ''}">${order.price}</span>
+                    </div>
+                    <div class="route-sub-text">${order.shortRoute}</div>
+                    <span class="fleet-tag-label">${order.tagLabel}</span>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function selectFleetCard(cardElement, truckNo, driver, phone) {
+            document.querySelectorAll('.allocation-fleet-card').forEach(c => c.classList.remove('card-selected'));
+            cardElement.classList.add('card-selected');
+
+            document.getElementById('summary-display-nopol').innerText = truckNo;
+            document.getElementById('summary-display-driver').innerText = driver;
+            document.getElementById('summary-display-phone').innerText = `📞 ${phone}`;
+        }
+
+        function executeOrderPipelineSuccess() {
+            const order = findOrderByIdGlobal(activeOrderId);
+            if(order) order.processed = true;
+            navigateRoute('screen-success');
+        }
+
+        /* Modal Overlay Handlers */
+        const overlayBg = document.getElementById('masterModalOverlay');
+        const rejectPanel = document.getElementById('rejectionSheetSubpanel');
+        const remindPanel = document.getElementById('remindAlertBoxSubpanel');
+
+        function triggerRejectOverlay(displayState) {
+            if (displayState) {
+                overlayBg.style.display = 'flex';
+                rejectPanel.style.display = 'flex';
+                remindPanel.style.display = 'none';
+            } else {
+                overlayBg.style.display = 'none';
+                rejectPanel.style.display = 'none';
+            }
+        }
+
+        function triggerRemindOverlay(displayState) {
+            if (displayState) {
+                overlayBg.style.display = 'flex';
+                rejectPanel.style.display = 'none';
+                remindPanel.style.display = 'block';
+            } else {
+                overlayBg.style.display = 'none';
+                remindPanel.style.display = 'none';
+            }
+        }
+
+        function handleOutsideModalClick(e) {
+            if (e.target === overlayBg) {
+                triggerRejectOverlay(false);
+                triggerRemindOverlay(false);
+            }
+        }
+
+        function selectRejectionRadio(radioElement, typeKey) {
+            document.querySelectorAll('.radio-selection-row').forEach(row => row.classList.remove('radio-selected'));
+            radioElement.classList.add('radio-selected');
+            
+            const optionalInputBox = document.getElementById('rejectionTextfieldNode');
+            if (typeKey === 'lainnya') {
+                optionalInputBox.style.display = 'block';
+                optionalInputBox.focus();
+            } else {
+                optionalInputBox.style.display = 'none';
+            }
+        }
+
+        function submitRejectionPipeline() {
+            triggerRejectOverlay(false);
+            const order = findOrderByIdGlobal(activeOrderId);
+            if(order) order.processed = true;
+            
+            // Redirect straight to dashboard open orders list view sequence upon rejection
+            navigateRoute('screen-dashboard');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            navigateRoute('screen-login');
+            const defaultTruck = document.getElementById('auto-focused-truck');
+            if(defaultTruck) defaultTruck.click();
+        });
+    </script>
+</body>
+</html>
