@@ -1284,7 +1284,7 @@
                 appBar.classList.add('bar-active');
 
                 if (targetScreenId === 'screen-detail') {
-                    backBtn.style.visibility = 'hidden';
+                    backBtn.style.display = 'none';
                     titleNode.classList.add('logo-mark'); titleNode.innerText = 'LOGISLY';
                     
                     // Match visual badge view if current order is priority status type
@@ -1292,24 +1292,24 @@
                     badgeNode.style.display = (currentOrder && currentOrder.isPriority) ? 'inline-flex' : 'none';
                     iconsNode.style.display = 'none';
                 } else if (targetScreenId === 'screen-allocate') {
-                    backBtn.style.visibility = 'visible';
+                    backBtn.style.display = 'flex';
                     titleNode.classList.remove('logo-mark'); titleNode.innerText = 'Alokasikan Unit';
                     badgeNode.style.display = 'none';
                     iconsNode.style.display = 'none';
                     backBtn.onclick = () => navigateRoute('screen-detail');
                 } else if (targetScreenId === 'screen-confirm') {
-                    backBtn.style.visibility = 'visible';
+                    backBtn.style.display = 'flex';
                     titleNode.classList.remove('logo-mark'); titleNode.innerText = 'Konfirmasi Order';
                     badgeNode.style.display = 'none';
                     iconsNode.style.display = 'none';
                     backBtn.onclick = () => navigateRoute('screen-allocate');
                 } else if (targetScreenId === 'screen-success') {
-                    backBtn.style.visibility = 'hidden';
+                    backBtn.style.display = 'none';
                     titleNode.classList.add('logo-mark'); titleNode.innerText = 'LOGISLY';
                     badgeNode.style.display = 'none';
                     iconsNode.style.display = 'none';
                 } else if (targetScreenId === 'screen-dashboard') {
-                    backBtn.style.visibility = 'hidden';
+                    backBtn.style.display = 'none';
                     titleNode.classList.remove('logo-mark'); titleNode.innerText = 'Open Orders';
                     badgeNode.style.display = 'none';
                     iconsNode.style.display = 'flex';
